@@ -51,7 +51,7 @@
         }
         function addPostListing(state, id, time, text, groupid) {
 		var idsp = id.split('_')[1];
-            var row = "<tr><td><input type=\"checkbox\" name=\"type\" value=\""+id +"\"></td><td>" + "<a href=https://www.facebook.com/groups/"+ groupid +"/permalink/" + idsp + ">" + idsp + "</td><td>" + time.split('T')[0] + "</td><td>" + text + "</td></tr>";
+            var row = "<tr><td><input type=\"checkbox\" name=\"type\" value=\""+id +"\"></td><td>" + "<a href=https://www.facebook.com/groups/"+ groupid +"/permalink/" + idsp + ">" + idsp + "</a>" + "</td><td>" + time.split('T')[0] + "</td><td>" + text + "</td></tr>";
             if (state === 'delete') {
 			$
                 $('#tableDelete > tbody:last-child').append(row);
