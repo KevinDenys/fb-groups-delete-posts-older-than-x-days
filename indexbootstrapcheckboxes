@@ -1,0 +1,170 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Delete posts older than X days on Facebook</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	
+    <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+    <script type="text/javascript">
+        var self = this;
+        var endpoint = 'https://graph.facebook.com/v2.5/';
+        var limit = '400';
+        function timeAgo(date) {
+            var seconds = Math.floor((new Date() - new Date(date)) / 1000);
+            interval = Math.floor(seconds / 86400);
+            if (interval > 1) {
+                return interval;
+            }
+            return 0;
+        }
+        function listPosts() {
+            $.getJSON(endpoint + groupid + '/feed?limit=' + limit + '&access_token=' + usertoken, function (data) {
+                $('#step1').hide();
+                $('#step2').show();
+                console.log(data);
+                data.data.forEach(function (post) {
+                    determineFateOfPost(post, groupid);
+                });
+            });
+        }
+        function determineFateOfPost(post, groupid) {
+            var time = timeAgo(post.updated_time);
+            var message = (post.message !== undefined) ? post.message : 'No text';
+            message = message.substring(0, 100) + "..";
+            if (time > days || days == 0) {
+                addPostListing('delete', post.id, post.updated_time, message, groupid);
+            } else {
+                addPostListing('save', post.id, post.updated_time, message, groupid);
+            }
+        }
+        function addPostListing(state, id, time, text, groupid) {
+		var idsp = id.split('_')[1];
+            var row = "<tr><td><input type=\"checkbox\" name=\"type\" value=\""+id +"\"></td><td>" + "<a href=https://www.facebook.com/groups/"+ groupid +"/permalink/" + idsp + ">" + idsp + "</td><td>" + time.split('T')[0] + "</td><td>" + text + "</td></tr>";
+            if (state === 'delete') {
+			$
+                $('#tableDelete > tbody:last-child').append(row);
+               
+            } else {
+                $('#tableSave > tbody:last-child').append(row);
+            }
+        }
+        function deletePosts() {
+		$("input:checkbox[name=type]:checked").each(function(){
+    deleteArray.push($(this).val());
+});
+
+            deleteArray.forEach(function (postid) {
+                $.ajax({
+                    url: endpoint + postid + '?access_token=' + usertoken,
+                    type: 'DELETE',
+                    success: $.noop,
+                    error: $.noop
+                });
+            });
+        }
+        $(document).ready(function () {
+            self.deleteArray = [];
+            self.usertoken = $('#uat').val();
+            self.groupid = $('#gid').val();
+            self.days = Math.floor($('#days option:selected').val());
+            $('#days').change(function () {
+                self.days = $('#days option:selected').val();
+            });
+            $('#listPosts').click(function () {
+			  $('#step22').hide();
+                listPosts();
+            });
+            $('#deleteNow').click(function () {
+                $('#step2').hide();
+                deletePosts();
+            });
+			$('#uat').change(function () {
+				self.usertoken = this.value;
+			})
+			$('#gid').change(function () {
+				self.groupid = this.value;
+			})
+        });
+    </script>
+</head>
+<body>
+<h1>Delete posts x days.</h1>
+
+<div class="col-lg-10 col-lg-offset-1" >
+<div id="step1">
+    <p>Get your access token <a href="https://developers.facebook.com/tools/explorer/">here</a></p>
+    <p>Permissions required on the user access token:</p>
+    - publish_actions
+
+    <p>Delete anything older than X days</p>
+    <select id="days" title="Days">
+        <option value="60" selected="">60</option>
+        <option>30</option>
+		  <option>6</option>
+		  <option>5</option>
+		  <option>4</option>
+		  <option>3</option>
+		  <option>2</option>
+		  <option>1</option>
+        <option>0</option>
+    </select>
+
+    <p>User access token</p>
+    <input id="uat" type="text" placeholder="Token" value=""/>
+
+    <p>Group Id</p>
+    <input id="gid" type="text" placeholder="Group Id" value=""/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <button id="listPosts">List posts to be deleted</button>
+</div>
+<div id="step2" style="display: none;">
+<div id="step22">
+    <h3>Will not be deleted</h3>
+    <table id="tableSave">
+        <thead>
+        <tr>
+            <th style="width: 25%">id</th>
+            <th style="width: 25%">time ago</th>
+            <th>Text</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+	</div>
+    <br/>
+    <br/>
+    <br/>
+    <h3>Will be deleted</h3>
+    <table id="tableDelete" class="table-striped">
+        <thead>
+        <tr>
+		 <th style="width: 25%">Delete?</th>
+            <th style="width: 25%">ID</th>
+            <th style="width: 25%">Posted</th>
+            <th style="width: 25%">Text</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <br />
+    <button id="deleteNow">Delete now</button>
+    <br />
+</div>
+</div>
+</body>
+</html>
